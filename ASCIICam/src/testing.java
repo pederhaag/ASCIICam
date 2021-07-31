@@ -1,101 +1,113 @@
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.highgui.HighGui;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 
 public class testing {
 
 	public static void main(String[] args) {
 		System.out.println("Hello");
-		System.loadLibrary( Core.NATIVE_LIBRARY_NAME );  
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
-     
-		//Reading the Image from the file  
-		String file ="C:\\Users\\peder\\Pictures\\test.jpg"; 
-		Mat src = Imgcodecs.imread(file); 
-		System.out.println(src);
-		Mat dst = new Mat();
-		Imgproc.cvtColor(src, dst, Imgproc.COLOR_RGB2GRAY); 
-		System.out.println(dst);
-		
-		String asciiImg = AsciiGenerator.fromImage(src);
-		
-		AsciiGenerator.asciiToFile(asciiImg, "C:\\Users\\peder\\Pictures\\ascii.txt");
-//		int type = dst.type();
-//		int channels = dst.channels();
-//		Long totalNumBytes = dst.total();
-//		
-//		// Populate data into byte-array
-//		byte[] imgData = new byte[(int) (dst.total() * dst.channels())];
-//		dst.get(0, 0, imgData);
-//		int numRows = dst.rows();
-//		int numCols = dst.cols();
+		test2();
+	}
+
+	static void test2() {
+		Map<Integer, Character> map = getConfig1();
+		loopOverEntrySet(map.entrySet());
+
+//		Set<Entry<Integer, Character>> set = map.entrySet();
+//		Iterator<Entry<Integer, Character>> i = set.iterator();
 //
-//		StringBuilder asciiImg = new StringBuilder((numCols + 1) * numRows);;
-//		for (int r = 0; r < numRows; r++) {
-//			System.out.println(String.format("row = %d/%d", r, numRows));
-//			for (int c = 0; c < numCols; c++) {
-//				asciiImg.append(getAsciiChar(imgData[r*numCols + c]));
-//			}
-//			asciiImg.append("\n");
-//			
+//		// Traverse map and print elements
+//		while (i.hasNext()) {
+//			Map.Entry<Integer, Character> me = i.next();
+//			System.out.print(me.getKey() + ": ");
+//			System.out.println(me.getValue());
 //		}
-		
-//		String asciiImg = "";
-//		for (int r = 0; r < numRows; r++) {
-//			System.out.println(String.format("row = %d/%d", r, numRows));
-//			for (int c = 0; c < numCols; c++) {
-//				asciiImg += getAsciiString(imgData[r*numCols + c]);
-//			}
-//			asciiImg += "\n";
-//			
-//		}
-		HighGui.imshow("Image", dst);
-		HighGui.waitKey();
+	}
 
-	}
-	
-	private static char getAsciiChar(byte gVal) {
-//		if (gVal < 0) {
-//			return "@";
-//		} else {
-//			return ".";
-//		}
-		final char res;
-		
-		if (gVal >= 230.0) {
-            res = ' ';
-        } else if (gVal >= 200.0) {
-            res = '.';
-        } else if (gVal >= 180.0) {
-            res = '*';
-        } else if (gVal >= 160.0) {
-            res = ':';
-        } else if (gVal >= 130.0) {
-            res = 'o';
-        } else if (gVal >= 100.0) {
-            res = '&';
-        } else if (gVal >= 70.0) {
-            res = '8';
-        } else if (gVal >= 50.0) {
-            res = '#';
-        } else {
-            res = '@';
-        }
-        return res;
-	}
-	
-	private static void asciiToFile(String img, String outputPath) {
-		try (PrintWriter out = new PrintWriter(outputPath)) {
-		    out.println(img);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	static void loopOverEntrySet(Set<Entry<Integer, Character>> set) {
+		Iterator<Entry<Integer, Character>> i = set.iterator();
+
+		// Traverse map and print elements
+		while (i.hasNext()) {
+			Map.Entry<Integer, Character> me = i.next();
+			System.out.print(me.getKey() + ": ");
+			System.out.println(me.getValue());
 		}
+	}
+
+	static Map<Integer, Character> getConfig1() {
+		Map<Integer, Character> map = new TreeMap<Integer, Character>(Collections.reverseOrder());
+
+		map.put(100, ' ');
+		map.put(70, '.');
+		map.put(50, '*');
+		map.put(30, ':');
+		map.put(0, 'o');
+		map.put(-30, '&');
+		map.put(-60, '8');
+		map.put(-80, '#');
+		map.put(-1000, '@');
+
+		return map;
+	}
+
+	static void test1() {
+//		 
+//
+//	     
+//		//Reading the Image from the file  
+//		String file ="C:\\Users\\peder\\Pictures\\test.jpg"; 
+//		
+////		Mat src = Imgcodecs.imread(file); 
+////		System.out.println(src);
+////		Mat dst = new Mat();
+////		Imgproc.cvtColor(src, dst, Imgproc.COLOR_RGB2GRAY); 
+////		System.out.println(dst);
+//
+//		
+//		Mat orgImage = ImageProcessing.readImage(file);
+//		HighGui.imshow("orgImage", orgImage);
+//		HighGui.waitKey();
+//		Mat greyImage = ImageProcessing.grayify(orgImage);
+//		Mat resizedImage = ImageProcessing.resize(greyImage, 100, 100);
+//		HighGui.imshow("resizedImage", resizedImage);
+//		HighGui.waitKey();
+//		
+//		String asciiImg = ImageProcessing.toAscii(resizedImage);
+//		
+//		String outputFile = "C:\\Users\\peder\\Pictures\\ascii.txt";
+//		ImageProcessing.asciiToFile(asciiImg, outputFile);
+//		
+//
+////		String asciiImg = ImageProcessing.toAscii(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE));
+////		
+////		ImageProcessing.asciiToFile(asciiImg, "C:\\Users\\peder\\Pictures\\ascii.txt");
+////		
+////		HighGui.imshow("Image", dst);
+////		HighGui.waitKey();
+//
+//		JFrame mainFrame = new JFrame("My test");
+//		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		// Label
+//        JLabel label = new JLabel(asciiImg);
+//        mainFrame.getContentPane().add(label);
+//		
+//
+//        //Display the window.
+//        mainFrame.pack();
+//        mainFrame.setVisible(true);
 	}
 
 }
