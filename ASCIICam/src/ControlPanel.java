@@ -1,33 +1,44 @@
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Set;
 
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+/**
+ * 
+ * The {@code ControlPanel} class is an extension of a JPanel. It is used as a
+ * container for user based controls in the GUI.
+ * 
+ * It contains a combobox for selecting different mapping, a start button and an
+ * exit button.
+ *
+ */
 class ControlPanel extends JPanel {
-	private JPanel leftPanel = new JPanel();
-	private JPanel rightPanel = new JPanel();
-	private ExitButton exitBtn = new ExitButton();
-	private StartCaptureBtn captureBtn = new StartCaptureBtn();
+	private static final long serialVersionUID = 8036698022990148234L;
+	private final JPanel leftPanel = new JPanel();
+	private final JPanel rightPanel = new JPanel();
+	private final ExitButton exitBtn = new ExitButton();
+	private final StartCaptureBtn captureBtn = new StartCaptureBtn();
 	private final String[] mapNames = buildMapNames();
-	private JComboBox<String> mappingSelector = new JComboBox<String>(mapNames);
-	private JLabel configDesc = new JLabel("Select mapping:");
-	private GUI GUIParent;
+	private final JComboBox<String> mappingSelector = new JComboBox<String>(mapNames);
+	private final JLabel configDesc = new JLabel("Select mapping:");
+	private final GUI GUIParent;
 
 	ControlPanel(GUI GUIParent) {
 		this.GUIParent = GUIParent;
 		this.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
-		this.setBorder(BorderFactory.createLineBorder(Color.BLUE));
 
-		leftPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+		/**
+		 * Left panel - containing a constant text-label and a combobox for selecting
+		 * ascii-mappings
+		 */
 		leftPanel.add(configDesc);
 		leftPanel.add(mappingSelector);
+		mappingSelector.setSelectedItem(AsciiMappings.getDefault());
 		mappingSelector.addActionListener(new ActionListener() {
 
 			@Override
@@ -39,18 +50,27 @@ class ControlPanel extends JPanel {
 		});
 		add(leftPanel);
 
-		rightPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
-		rightPanel.add(exitBtn);
+		/**
+		 * Right panel - containing a capture button and exit button
+		 */
 		rightPanel.add(captureBtn);
+		rightPanel.add(exitBtn);
 		add(rightPanel);
 
 	}
 
+	/**
+	 * Build a {@code String} array with mappingnames. Used for the combobox
+	 * @return Array of mapping names
+	 */
 	private static String[] buildMapNames() {
 		Set<String> names = AsciiPanel.getAvailMappings();
 		return names.toArray(new String[names.size()]);
 	}
 
+	/**
+	 * Resize all of the components ensuring the designed layout
+	 */
 	void resizeComponents() {
 		int totalHeight = this.getHeight();
 		int totalWidth = this.getWidth();
@@ -64,10 +84,12 @@ class ControlPanel extends JPanel {
 		GUI.setCompSize(rightPanel, rightWidth, rightHeight);
 	}
 
+	/**
+	 * 
+	 * A simple exit-button
+	 *
+	 */
 	private class ExitButton extends JButton {
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
 		private static final String displayText = "Exit";
 
@@ -84,20 +106,19 @@ class ControlPanel extends JPanel {
 		}
 	}
 
+	/**
+	 * 
+	 * A simple start-stop button for capturing
+	 *
+	 */
 	private class StartCaptureBtn extends JButton {
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
 		private static final String unpressedText = "Start capture";
 		private static final String pressedText = "Stop capture";
 		private Boolean pressed = false;
-//		private final Border pressedBorder = BorderFactory.createBevelBorder(2);
-//		private final Border unpressedBorder = BorderFactory.createBevelBorder(2);
 
 		StartCaptureBtn() {
 			super(unpressedText);
-//			setBorder(unpressedBorder);
 			this.addActionListener(new ActionListener() {
 
 				@Override
@@ -106,12 +127,10 @@ class ControlPanel extends JPanel {
 						setText(unpressedText);
 						pressed = false;
 						GUIParent.stopCapture();
-//						setBorder(unpressedBorder);
 					} else {
 						setText(pressedText);
 						pressed = true;
 						GUIParent.startCapture();
-//						setBorder(pressedBorder);
 
 					}
 				}

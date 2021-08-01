@@ -1,43 +1,23 @@
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingWorker;
-import javax.swing.border.Border;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.Videoio;
 
 public class GUI extends JFrame {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+
 	// Some sizes
 	private int frameWidth;
 	private int frameHeight;
@@ -50,16 +30,12 @@ public class GUI extends JFrame {
 	private int ctrlWidth;
 	private static final int ctrlHeight = 50;
 
-	AsciiPanel asciiPanel = new AsciiPanel();
-	private CameraPanel cameraPanel = new CameraPanel(this);
-	private JPanel masterPanel = new JPanel();
-	private JPanel mainPanel = new JPanel();
-	private ControlPanel ctrlPanel = new ControlPanel(this);
-//	private JPanel ctrlPanel = new JPanel();
-//	private ExitButton exitBtn = new ExitButton();
-//	private StartCaptureBtn captureBtn = new StartCaptureBtn();
+	final AsciiPanel asciiPanel = new AsciiPanel(this);
+	private final CameraPanel cameraPanel = new CameraPanel(this);
+	private final JPanel masterPanel = new JPanel();
+	private final JPanel mainPanel = new JPanel();
+	private final ControlPanel ctrlPanel = new ControlPanel(this);
 	private Mat imageToConvert = null;
-	Boolean captureMode = false;
 	private static final String frameTitle = "ASCII Camera";
 
 	GUI() {
@@ -71,15 +47,16 @@ public class GUI extends JFrame {
 		setInitialSizes();
 	}
 
+	/**
+	 * Create the general structure of the differen GUI-elements
+	 */
 	private void buildGuiElements() {
 		// Master panel
 		masterPanel.setLayout(new BoxLayout(masterPanel, BoxLayout.PAGE_AXIS));
-		masterPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		this.add(masterPanel);
 
 		// * Main panel
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.LINE_AXIS));
-		mainPanel.setBorder(BorderFactory.createLineBorder(Color.green));
 		masterPanel.add(mainPanel);
 
 		// ** Camera panel
@@ -92,6 +69,9 @@ public class GUI extends JFrame {
 		masterPanel.add(ctrlPanel);
 	}
 
+	/**
+	 * Initialize the sizes of the different components in the GUI
+	 */
 	private void setInitialSizes() {
 		mainHeight = frameHeight - ctrlHeight;
 		mainWidth = frameWidth;
@@ -108,6 +88,12 @@ public class GUI extends JFrame {
 		setLocationRelativeTo(null);
 	}
 
+	/**
+	 * Resize the components in the GUI-layout based on new capturesource dimensions
+	 * 
+	 * @param newCamWidth  width of the capturesource
+	 * @param newCamHeight height of the capturesource
+	 */
 	void setCameraSize(int newCamWidth, int newCamHeight) {
 		camHeight = newCamHeight;
 		camWidth = newCamWidth;
@@ -127,32 +113,32 @@ public class GUI extends JFrame {
 	private Lock imgLock = new ReentrantLock();
 	private Condition imgReady = imgLock.newCondition();
 
+	/**
+	 * Insert a captured image from a capturesource into storage. This for later
+	 * retrieval by an {@link AsciiWorker} to convert.
+	 * 
+	 * @param imageMat image to insert
+	 * @throws InterruptedException
+	 */
 	void insertImgToConvert(Mat imageMat) throws InterruptedException {
 		imgLock.lock();
 		try {
-//			System.out.println(Thread.currentThread().getName() + " has acquired lock");
-//			while (imageToConvert != null) {
-//				System.out.print(Thread.currentThread().getName() + " is waiting...");
-//				System.out.println("imageToConvert = " + imageToConvert);
-//				needImg.await();
-//			}
 			imageToConvert = imageMat;
 			imgReady.signalAll();
-//			Boolean check = imageToConvert == null;
-//			System.out.println("imgReady signalled! nullcheck should be false: " + check);
 		} finally {
 			imgLock.unlock();
 		}
 	}
 
+	/**
+	 * Grab an image in order to convert it to ascii-art
+	 * 
+	 * @return a {@code Mat}-object representing the image
+	 * @throws InterruptedException
+	 */
 	Mat getImgToConvert() throws InterruptedException {
 		imgLock.lock();
 		try {
-//			System.out.println(Thread.currentThread().getName() + " has acquired lock");
-			while (imageToConvert == null) {
-//				System.out.println(Thread.currentThread().getName() + " is waiting...");
-				imgReady.await();
-			}
 			Mat output = imageToConvert;
 			imageToConvert = null;
 			return output;
@@ -161,15 +147,19 @@ public class GUI extends JFrame {
 		}
 	}
 
-	void waitForImage() {
+	/**
+	 * Wait for the running {@link AsciiWorker} to publish a new image which needs
+	 * to be converted to ascii-art
+	 * 
+	 * @throws InterruptedException
+	 */
+	void waitForImage() throws InterruptedException {
 		imgLock.lock();
 		try {
-//			System.out.println(Thread.currentThread().getName() + " is waiting for image");
-			while (imageToConvert == null) {
+			while (imageToConvert == null && asciiPanel.captureMode) {
 				imgReady.await();
 			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+
 		} finally {
 			imgLock.unlock();
 		}
@@ -178,8 +168,8 @@ public class GUI extends JFrame {
 	private final ExecutorService exec = Executors.newFixedThreadPool(2);
 
 	void startCapture() {
-		captureMode = true;
-		CameraTask cameraWorker = new CameraTask(this);
+		// Start a CameraWorker
+		CameraWorker cameraWorker = cameraPanel.createCameraWorker();
 		cameraWorker.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if ("nativeResolution".equals(evt.getPropertyName())) {
@@ -191,90 +181,24 @@ public class GUI extends JFrame {
 		});
 		exec.execute(cameraWorker);
 
-		AsciiWorker asciiWorker = new AsciiWorker(this);
+		// Start a AsciiWorker
+		AsciiWorker asciiWorker = asciiPanel.createAsciiWorker();
 		exec.execute(asciiWorker);
-	}
 
-	private class CameraTask extends SwingWorker<Boolean, Object> {
-		private CameraPanel camPanel;
-		private GUI GUI;
-
-		CameraTask(GUI GUIobj) {
-			this.GUI = GUIobj;
-			this.camPanel = GUIobj.cameraPanel;
-		}
-
-		@Override
-		protected Boolean doInBackground() throws Exception {
-			// Signal native resolution of camera
-			double nativeHeight = camPanel.capture.get(Videoio.CAP_PROP_FRAME_HEIGHT);
-			double nativeWidth = camPanel.capture.get(Videoio.CAP_PROP_FRAME_WIDTH);
-			signalNativeResolution((int) nativeWidth, (int) nativeHeight);
-
-			Mat imageMat = new Mat();
-			byte[] imageData;
-
-			Boolean moreWork = GUI.captureMode;
-			while (moreWork) {
-				// Read image to matrix
-				camPanel.capture.read(imageMat);
-				// convert to byte
-				final MatOfByte buf = new MatOfByte();
-				Imgcodecs.imencode(".jpg", imageMat, buf);
-				imageData = buf.toArray();
-
-				// Store icon
-				camPanel.updateCameraScreen(new ImageIcon(imageData));
-
-				if (GUI != null) {
-					GUI.insertImgToConvert(imageMat);
-				}
-
-				moreWork = GUI.captureMode;
-			}
-
-			return true;
-		}
-
-		private void signalNativeResolution(int width, int height) {
-			this.firePropertyChange("nativeResolution", null, new Dimension(width, height));
-		}
-
-	}
-
-	private class AsciiWorker extends SwingWorker<Boolean, Object> {
-		private GUI parent;
-		private AsciiPanel asciiPanel;
-
-		AsciiWorker(GUI parentGUI) {
-			this.parent = parentGUI;
-			this.asciiPanel = parentGUI.asciiPanel;
-		}
-
-		@Override
-		protected Boolean doInBackground() throws Exception {
-			Mat img;
-			Mat greyImage;
-			String[] asciiImg;
-			while (parent.captureMode) {
-				parent.waitForImage();
-				img = parent.getImgToConvert();
-//				System.out.println(img);
-				greyImage = ImageProcessing.grayify(img);
-				asciiImg = ImageProcessing.toAscii(greyImage, asciiPanel.getCurrentMapping());
-				asciiPanel.updateImage(asciiImg);
-			}
-			return true;
-		}
-
+		// Start capturing
+		cameraPanel.startCapture();
+		asciiPanel.startCapture();
 	}
 
 	void stopCapture() {
-		captureMode = false;
+		cameraPanel.stopCapture();
+		asciiPanel.stopCapture();
 	}
 
+	/*
+	 * Resize components. Usually called after setting updating size-attributes.
+	 */
 	private void resizeComponents() {
-
 		GUI.setCompSize(masterPanel, mainWidth, frameHeight);
 		GUI.setCompSize(mainPanel, mainWidth, mainHeight);
 		GUI.setCompSize(cameraPanel, camWidth, camHeight);
@@ -290,7 +214,7 @@ public class GUI extends JFrame {
 
 	static void setCompSize(JComponent comp, int width, int height) {
 		Dimension newSize = new Dimension(width, height);
-		comp.setSize(newSize);
+		// comp.setSize(newSize);
 		comp.setPreferredSize(newSize);
 	}
 
@@ -299,10 +223,6 @@ public class GUI extends JFrame {
 		setLocationRelativeTo(null);
 		pack();
 		setVisible(true);
-	}
-
-	void updateImage(String[] asciiImg) {
-		asciiPanel.updateImage(asciiImg);
 	}
 
 	public static void main(String[] args) {
