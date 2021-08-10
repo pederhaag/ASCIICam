@@ -1,3 +1,6 @@
+package main;
+
+
 import javax.swing.SwingWorker;
 
 import org.opencv.core.Mat;

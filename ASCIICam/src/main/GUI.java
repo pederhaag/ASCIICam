@@ -1,3 +1,6 @@
+package main;
+
+
 import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -12,7 +15,6 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
 public class GUI extends JFrame {
@@ -212,6 +214,9 @@ public class GUI extends JFrame {
 		pack();
 	}
 
+	/*
+	 * Wrapper for resizing components
+	 */
 	static void setCompSize(JComponent comp, int width, int height) {
 		Dimension newSize = new Dimension(width, height);
 		// comp.setSize(newSize);
@@ -226,7 +231,9 @@ public class GUI extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+//		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+//		nu.pattern.OpenCV.loadShared();
+		nu.pattern.OpenCV.loadLocally();
 		GUI myGUI = new GUI();
 		myGUI.run();
 	}

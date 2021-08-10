@@ -25,3 +25,5 @@ hs_err_pid*
 # Misc.
 testing.java
 /bin/
+/target/
+*test.java
